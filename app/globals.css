@@ -226,9 +226,12 @@
   .tui-heading-xl {
     @apply text-5xl font-bold text-tui-blue-500;
   }
+  .tui-heading-xl-white {
+    @apply text-5xl font-bold text-tui-white text-center;
+  }
 
   .tui-heading-lg {
-    @apply text-4xl font-bold text-tui-white text-center;
+    @apply text-4xl font-bold text-tui-blue-500 text-center;
   }
 
   .tui-heading-md {
