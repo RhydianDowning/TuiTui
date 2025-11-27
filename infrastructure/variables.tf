@@ -40,3 +40,15 @@ variable "amazon_ai_api_key" {
   default     = ""
   sensitive   = true
 }
+
+variable "ai_model_name" {
+  description = "AI model name (e.g., claude-3-haiku-20240307 or Amazon Q model)"
+  type        = string
+  default     = "claude-3-haiku-20240307"
+}
+
+variable "ai_api_endpoint" {
+  description = "AI API endpoint URL"
+  type        = string
+  default     = "https://api.anthropic.com/v1/messages"
+}

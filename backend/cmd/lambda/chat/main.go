@@ -32,13 +32,12 @@ type ChatMessage struct {
 	Content string `json:"content"`
 }
 
-func callAmazonQ(messages []ChatMessage, systemPrompt string, apiKey string, modelName string) (string, error) {
+func callAmazonQ(messages []ChatMessage, systemPrompt string, apiKey string, modelName string, apiEndpoint string) (string, error) {
 	if apiKey == "" {
 		return "", fmt.Errorf("Amazon AI API key not configured")
 	}
 
-	// TODO: Update to Amazon Q endpoint when migrating from temporary provider
-	url := "https://api.anthropic.com/v1/messages"
+	url := apiEndpoint
 
 	amazonQMessages := make([]map[string]string, len(messages))
 	for i, msg := range messages {
@@ -70,7 +69,7 @@ func callAmazonQ(messages []ChatMessage, systemPrompt string, apiKey string, mod
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("x-api-key", apiKey)
-	req.Header.Set("anthropic-version", "2023-06-01") // API version header (required by current provider)
+	req.Header.Set("anthropic-version", "2023-06-01")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -206,7 +205,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	// Get API key from environment
 	apiKey := os.Getenv("AMAZON_AI_API_KEY")
 
-	amazonQResponse, err := callAmazonQ(messages, systemPrompt, apiKey, cfg.AIModelName)
+	amazonQResponse, err := callAmazonQ(messages, systemPrompt, apiKey, cfg.AIModelName, cfg.AIAPIEndpoint)
 	if err != nil {
 		errorResponse := ErrorResponse{
 			Error: fmt.Sprintf("Failed to get response from AmazonQ: %v", err),

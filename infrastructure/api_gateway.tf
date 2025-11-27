@@ -565,7 +565,6 @@ resource "aws_api_gateway_deployment" "main" {
   }
 }
 
-# Stage settings
 resource "aws_api_gateway_stage" "main" {
   deployment_id = aws_api_gateway_deployment.main.id
   rest_api_id   = aws_api_gateway_rest_api.main.id
@@ -591,7 +590,6 @@ resource "aws_api_gateway_stage" "main" {
   }
 }
 
-# Method settings for logging
 resource "aws_api_gateway_method_settings" "main" {
   rest_api_id = aws_api_gateway_rest_api.main.id
   stage_name  = aws_api_gateway_stage.main.stage_name
@@ -603,7 +601,6 @@ resource "aws_api_gateway_method_settings" "main" {
   }
 }
 
-# CloudWatch Log Group for API Gateway
 resource "aws_cloudwatch_log_group" "api_gateway" {
   name              = "/aws/apigateway/${var.project_name}-${var.environment}"
   retention_in_days = 7

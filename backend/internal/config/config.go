@@ -23,7 +23,8 @@ type Config struct {
 	CognitoUserPoolClientID string
 
 	// AI Model configuration
-	AIModelName string
+	AIModelName   string
+	AIAPIEndpoint string
 
 	// Database configuration (for future use)
 	DBHost     string
@@ -42,7 +43,8 @@ func Load() (*Config, error) {
 		APIVersion:              getEnv("API_VERSION", "v1"),
 		CognitoUserPoolID:       getEnv("COGNITO_USER_POOL_ID", ""),
 		CognitoUserPoolClientID: getEnv("COGNITO_USER_POOL_CLIENT_ID", ""),
-		AIModelName:             getEnv("AI_MODEL_NAME", "claude-3-haiku-20240307"), // Temporary default, will change to Amazon Q model
+		AIModelName:             getEnv("AI_MODEL_NAME", "claude-3-haiku-20240307"),                 // Temporary default, will change to Amazon Q model
+		AIAPIEndpoint:           getEnv("AI_API_ENDPOINT", "https://api.anthropic.com/v1/messages"), // Temporary endpoint, will change to Amazon Q endpoint
 		DBHost:                  getEnv("DB_HOST", ""),
 		DBPort:                  getEnvAsInt("DB_PORT", 5432),
 		DBName:                  getEnv("DB_NAME", ""),

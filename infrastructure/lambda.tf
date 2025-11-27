@@ -133,6 +133,8 @@ resource "aws_lambda_function" "chat" {
       COGNITO_USER_POOL_ID         = aws_cognito_user_pool.main.id
       COGNITO_USER_POOL_CLIENT_ID  = aws_cognito_user_pool_client.main.id
       AMAZON_AI_API_KEY            = var.amazon_ai_api_key
+      AI_MODEL_NAME                = var.ai_model_name
+      AI_API_ENDPOINT              = var.ai_api_endpoint
     }
   }
 
