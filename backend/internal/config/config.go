@@ -18,6 +18,10 @@ type Config struct {
 	// API configuration
 	APIVersion string
 
+	// Cognito configuration
+	CognitoUserPoolID       string
+	CognitoUserPoolClientID string
+
 	// Database configuration (for future use)
 	DBHost     string
 	DBPort     int
@@ -29,15 +33,17 @@ type Config struct {
 // Load reads configuration from environment variables
 func Load() (*Config, error) {
 	cfg := &Config{
-		Environment: getEnv("ENVIRONMENT", "development"),
-		LogLevel:    getEnv("LOG_LEVEL", "info"),
-		AWSRegion:   getEnv("AWS_REGION", "us-east-1"),
-		APIVersion:  getEnv("API_VERSION", "v1"),
-		DBHost:      getEnv("DB_HOST", ""),
-		DBPort:      getEnvAsInt("DB_PORT", 5432),
-		DBName:      getEnv("DB_NAME", ""),
-		DBUser:      getEnv("DB_USER", ""),
-		DBPassword:  getEnv("DB_PASSWORD", ""),
+		Environment:             getEnv("ENVIRONMENT", "development"),
+		LogLevel:                getEnv("LOG_LEVEL", "info"),
+		AWSRegion:               getEnv("AWS_REGION", "us-east-1"),
+		APIVersion:              getEnv("API_VERSION", "v1"),
+		CognitoUserPoolID:       getEnv("COGNITO_USER_POOL_ID", ""),
+		CognitoUserPoolClientID: getEnv("COGNITO_USER_POOL_CLIENT_ID", ""),
+		DBHost:                  getEnv("DB_HOST", ""),
+		DBPort:                  getEnvAsInt("DB_PORT", 5432),
+		DBName:                  getEnv("DB_NAME", ""),
+		DBUser:                  getEnv("DB_USER", ""),
+		DBPassword:              getEnv("DB_PASSWORD", ""),
 	}
 
 	// Validate required fields

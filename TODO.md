@@ -1,11 +1,10 @@
 [x] Phase 1: Setup basic backend structure (folders, go.mod, basic configs)
-
-[ ] Phase 2: Create a simple 'Hello World' Lambda function
-[ ] Phase 3: Setup basic Terraform for single Lambda deployment
-[ ] Phase 4: Add API Gateway integration for Lambda
-[ ] Phase 5: Implement AWS Cognito authentication
-[ ] Phase 6: Add DynamoDB for data storage
-[ ] Phase 7: Integrate Amazon Q for AI processing
+[x] Phase 2: Create a simple 'Hello World' Lambda function
+[x] Phase 3: Setup basic Terraform for single Lambda deployment
+[x] Phase 4: Add API Gateway integration for Lambda
+[-] Phase 5: Implement AWS Cognito authentication - Partial completion
+[ ] Phase 6: Add DynamoDB for data storage (skipped for now)
+[x] Phase 7: Integrate Claude for AI processing
 [ ] Phase 8: Connect frontend to backend APIs
 
 Phase 1: Setup Basic Backend Structure
@@ -71,14 +70,14 @@ What you'll do:
 - Test data persistence
 Deliverable: Store and retrieve conversation history from DynamoDB
 ---
-Phase 7: Integrate Amazon Q
+Phase 7: Integrate Claude for AI processing
 Goal: Add AI capabilities
 What you'll do:
-- Add Amazon Q SDK
+- Add Anthropic Claude API integration
 - Create prompt processing Lambda
 - Handle streaming responses (if needed)
 - Connect authenticated user to AI service
-Deliverable: Send prompts to Amazon Q and receive responses
+Deliverable: Send prompts to Claude and receive responses
 ---
 Phase 8: Frontend Integration
 Goal: Connect your Next.js app to backend
