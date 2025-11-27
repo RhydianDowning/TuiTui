@@ -112,7 +112,10 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	// Parse request body
 	var chatReq struct {
-		Message string `json:"message"`
+		Message         string   `json:"message"`
+		Team            string   `json:"team,omitempty"`
+		TeamInfo        []string `json:"teamInfo,omitempty"`
+		MarkdownContent string   `json:"markdownContent,omitempty"`
 	}
 	if err := json.Unmarshal([]byte(request.Body), &chatReq); err != nil {
 		errorResponse := ErrorResponse{
@@ -139,11 +142,23 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		}, nil
 	}
 
+	// Build enhanced message with additional context
+	enhancedMessage := chatReq.Message
+	if chatReq.Team != "" {
+		enhancedMessage += "\n\nTeam: " + chatReq.Team
+	}
+	if len(chatReq.TeamInfo) > 0 {
+		enhancedMessage += "\n\nTeam Information:\n" + fmt.Sprintf("%v", chatReq.TeamInfo)
+	}
+	if chatReq.MarkdownContent != "" {
+		enhancedMessage += "\n\nMarkdown Content:\n" + chatReq.MarkdownContent
+	}
+
 	// Get API key from environment
 	apiKey := os.Getenv("ANTHROPIC_API_KEY")
 
 	// Call Claude API
-	claudeResponse, err := callClaude(chatReq.Message, apiKey)
+	claudeResponse, err := callClaude(enhancedMessage, apiKey)
 	if err != nil {
 		errorResponse := ErrorResponse{
 			Error: fmt.Sprintf("Failed to get response from Claude: %v", err),

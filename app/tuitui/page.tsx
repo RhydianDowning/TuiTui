@@ -48,11 +48,25 @@ export default function TuiTuiPage() {
       // Import apiClient dynamically to avoid SSR issues
       const { apiClient } = await import('@/lib/api')
 
+      // Get settings from localStorage
+      const savedSettings = localStorage.getItem('tuitui-settings')
+      const settings = savedSettings ? JSON.parse(savedSettings) : {}
+
+      // Prepare additional data
+      const additionalData: any = {}
+      if (settings.team && settings.team !== 'add-new') {
+        additionalData.team = settings.team
+        additionalData.teamInfo = Array(11).fill('example.com') // As per the mock
+      }
+      if (settings.markdownFile) {
+        additionalData.markdownContent = settings.markdownFile.content
+      }
+
       console.log('Sending chat request with token:', tokens.access_token.substring(0, 20) + '...')
 
-      // Call the chat API
+      // Call the chat API with additional data
       const response = await apiClient.chat(
-        { message: userMessage },
+        { message: userMessage, ...additionalData },
         tokens.access_token
       )
 
