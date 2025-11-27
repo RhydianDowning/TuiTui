@@ -12,9 +12,9 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"tuitui-backend/internal/config"
 )
 
-// Response represents the Lambda response structure
 type Response struct {
 	Message     string `json:"message"`
 	Environment string `json:"environment"`
@@ -23,41 +23,37 @@ type Response struct {
 	Status      string `json:"status"`
 }
 
-// ErrorResponse represents an error response structure
 type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-// ChatMessage represents a message in the conversation history
 type ChatMessage struct {
 	Role    string `json:"role"`
 	Content string `json:"content"`
 }
 
-// callClaude calls the Anthropic Claude API with conversation history and system context
-func callClaude(messages []ChatMessage, systemPrompt string, apiKey string) (string, error) {
+func callAmazonQ(messages []ChatMessage, systemPrompt string, apiKey string, modelName string) (string, error) {
 	if apiKey == "" {
-		return "", fmt.Errorf("Anthropic API key not configured")
+		return "", fmt.Errorf("Amazon AI API key not configured")
 	}
 
+	// TODO: Update to Amazon Q endpoint when migrating from temporary provider
 	url := "https://api.anthropic.com/v1/messages"
 
-	// Convert ChatMessage to the format Claude expects
-	claudeMessages := make([]map[string]string, len(messages))
+	amazonQMessages := make([]map[string]string, len(messages))
 	for i, msg := range messages {
-		claudeMessages[i] = map[string]string{
+		amazonQMessages[i] = map[string]string{
 			"role":    msg.Role,
 			"content": msg.Content,
 		}
 	}
 
 	requestBody := map[string]interface{}{
-		"model":      "claude-3-haiku-20240307",
+		"model":      modelName,
 		"max_tokens": 1000,
-		"messages":   claudeMessages,
+		"messages":   amazonQMessages,
 	}
 
-	// Add system prompt if provided
 	if systemPrompt != "" {
 		requestBody["system"] = systemPrompt
 	}
@@ -74,12 +70,12 @@ func callClaude(messages []ChatMessage, systemPrompt string, apiKey string) (str
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("x-api-key", apiKey)
-	req.Header.Set("anthropic-version", "2023-06-01")
+	req.Header.Set("anthropic-version", "2023-06-01") // API version header (required by current provider)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to call Claude API: %v", err)
+		return "", fmt.Errorf("failed to call Amazon API: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -89,7 +85,7 @@ func callClaude(messages []ChatMessage, systemPrompt string, apiKey string) (str
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Claude API error: %s", string(body))
+		return "", fmt.Errorf("AmazonQ API error: %s", string(body))
 	}
 
 	var response map[string]interface{}
@@ -105,7 +101,7 @@ func callClaude(messages []ChatMessage, systemPrompt string, apiKey string) (str
 		}
 	}
 
-	return "No response from Claude", nil
+	return "No response from AmazonQ", nil
 }
 
 // Handler is the Lambda function handler
@@ -122,6 +118,20 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	if request.HTTPMethod == "OPTIONS" {
 		return events.APIGatewayProxyResponse{
 			StatusCode: 200,
+			Headers:    corsHeaders,
+		}, nil
+	}
+
+	// Load configuration from environment variables
+	cfg, err := config.Load()
+	if err != nil {
+		errorResponse := ErrorResponse{
+			Error: fmt.Sprintf("Failed to load configuration: %v", err),
+		}
+		errorBody, _ := json.Marshal(errorResponse)
+		return events.APIGatewayProxyResponse{
+			StatusCode: 500,
+			Body:       string(errorBody),
 			Headers:    corsHeaders,
 		}, nil
 	}
@@ -188,19 +198,18 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	// Log for debugging
 	fmt.Printf("Conversation history received: %d messages\n", len(chatReq.ConversationHistory))
-	fmt.Printf("Total messages being sent to Claude: %d\n", len(messages))
+	fmt.Printf("Total messages being sent to AmazonQ: %d\n", len(messages))
 	for i, msg := range messages {
 		fmt.Printf("Message %d [%s]: %s\n", i, msg.Role, msg.Content[:min(50, len(msg.Content))])
 	}
 
 	// Get API key from environment
-	apiKey := os.Getenv("ANTHROPIC_API_KEY")
+	apiKey := os.Getenv("AMAZON_AI_API_KEY")
 
-	// Call Claude API with conversation history and system prompt
-	claudeResponse, err := callClaude(messages, systemPrompt, apiKey)
+	amazonQResponse, err := callAmazonQ(messages, systemPrompt, apiKey, cfg.AIModelName)
 	if err != nil {
 		errorResponse := ErrorResponse{
-			Error: fmt.Sprintf("Failed to get response from Claude: %v", err),
+			Error: fmt.Sprintf("Failed to get response from AmazonQ: %v", err),
 		}
 		errorBody, _ := json.Marshal(errorResponse)
 		return events.APIGatewayProxyResponse{
@@ -212,7 +221,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	// Create response
 	response := Response{
-		Message:     claudeResponse,
+		Message:     amazonQResponse,
 		Environment: "development",
 		AWSRegion:   "eu-west-2",
 		APIVersion:  "v1",

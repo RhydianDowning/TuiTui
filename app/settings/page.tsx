@@ -42,6 +42,24 @@ export default function SettingsPage() {
   const [teamLoading, setTeamLoading] = useState(false)
   const [teamInfo, setTeamInfo] = useState<string[]>([])
 
+  useEffect(() => {
+    const loadDefaults = async () => {
+      if (!settings.markdownFile) {
+        try {
+          const response = await fetch('/tuitui.md')
+          const content = await response.text()
+          setSettings(prev => ({
+            ...prev,
+            markdownFile: { name: 'tuitui.md', content }
+          }))
+        } catch (error) {
+          console.error('Failed to load default markdown file:', error)
+        }
+      }
+    }
+    loadDefaults()
+  }, [])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     localStorage.setItem('tuitui-settings', JSON.stringify(settings))
@@ -68,13 +86,25 @@ export default function SettingsPage() {
     }
   }
 
-  const handleViewTeamInfo = () => {
+  const handleViewTeamInfo = async () => {
     setTeamLoading(true)
     setTeamDialogOpen(true)
-    setTimeout(() => {
-      setTeamInfo(Array(11).fill('example.com'))
-      setTeamLoading(false)
-    }, 2000)
+    try {
+      const response = await fetch('/list.txt')
+      const content = await response.text()
+      const links = content.split('\n').filter(line => line.trim() !== '')
+      // Add a delay to maintain loading experience
+      setTimeout(() => {
+        setTeamInfo(links)
+        setTeamLoading(false)
+      }, 2000)
+    } catch (error) {
+      console.error('Failed to load team info:', error)
+      setTimeout(() => {
+        setTeamInfo(['Error loading team information'])
+        setTeamLoading(false)
+      }, 2000)
+    }
   }
 
   return (
@@ -247,13 +277,17 @@ export default function SettingsPage() {
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-tui-blue-500"></div>
                           <span className="ml-2">Loading team information...</span>
                         </div>
-                      ) : (
-                        <ul className="list-disc list-inside space-y-1">
-                          {teamInfo.map((item, index) => (
-                            <li key={index}>{item}</li>
-                          ))}
-                        </ul>
-                      )}
+                       ) : (
+                         <div className="space-y-3">
+                           {teamInfo.map((item, index) => (
+                             <div key={index} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                               <div className="text-sm text-gray-900 dark:text-gray-100 break-all">
+                                 {item}
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                       )}
                     </DialogContent>
                   </Dialog>
                 )}

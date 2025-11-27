@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/yourusername/tuitui-backend/internal/config"
+	"tuitui-backend/internal/config"
 )
 
 // Response represents the Lambda response structure

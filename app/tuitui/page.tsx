@@ -49,19 +49,16 @@ export default function TuiTuiPage() {
       // Import apiClient dynamically to avoid SSR issues
       const { apiClient } = await import('@/lib/api')
 
-      // Get settings from localStorage
       const savedSettings = localStorage.getItem('tuitui-settings')
       const settings = savedSettings ? JSON.parse(savedSettings) : {}
 
       // Build conversation history from current messages (includes all previous messages)
-      // Note: The current userMessage is passed separately, so we only include prior messages here
       const conversationHistory: ChatMessage[] = messages.map((msg) => ({
         role: msg.type === 'user' ? 'user' : 'assistant',
         content: msg.text,
       }))
 
-      // Prepare request data with conversation history and additional context
-      // The backend will append the current message to the conversation history
+      // Prepare request data with conversation history
       const requestData: any = {
         message: userMessage,
         conversationHistory,
@@ -69,20 +66,23 @@ export default function TuiTuiPage() {
 
       if (settings.team && settings.team !== 'add-new') {
         requestData.team = settings.team
-        requestData.teamInfo = Array(11).fill('example.com')
+        try {
+          const response = await fetch('/list.txt')
+          const content = await response.text()
+          const links = content.split('\n').filter(line => line.trim() !== '')
+          requestData.teamInfo = links
+        } catch (error) {
+          console.error('Failed to load team info:', error)
+          requestData.teamInfo = []
+        }
       }
       if (settings.markdownFile) {
         requestData.markdownContent = settings.markdownFile.content
       }
 
-      console.log('Sending chat request with token:', tokens!.access_token.substring(0, 20) + '...')
-      console.log('Conversation history being sent:', conversationHistory)
-      console.log('Current message:', userMessage)
-
       // Call the chat API with conversation history and additional data
       const response = await apiClient.chat(requestData, tokens!.access_token)
 
-      console.log('Chat response:', response)
 
       // Add bot response
       setMessages((prev) => [...prev, { type: "bot", text: response.message }])

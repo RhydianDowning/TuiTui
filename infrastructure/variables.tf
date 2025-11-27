@@ -34,8 +34,8 @@ variable "lambda_timeout" {
   default     = 30
 }
 
-variable "anthropic_api_key" {
-  description = "Anthropic API key for Claude"
+variable "amazon_ai_api_key" {
+  description = "Amazon AI API key for AmazonQ"
   type        = string
   default     = ""
   sensitive   = true

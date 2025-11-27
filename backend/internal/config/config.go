@@ -22,6 +22,9 @@ type Config struct {
 	CognitoUserPoolID       string
 	CognitoUserPoolClientID string
 
+	// AI Model configuration
+	AIModelName string
+
 	// Database configuration (for future use)
 	DBHost     string
 	DBPort     int
@@ -39,6 +42,7 @@ func Load() (*Config, error) {
 		APIVersion:              getEnv("API_VERSION", "v1"),
 		CognitoUserPoolID:       getEnv("COGNITO_USER_POOL_ID", ""),
 		CognitoUserPoolClientID: getEnv("COGNITO_USER_POOL_CLIENT_ID", ""),
+		AIModelName:             getEnv("AI_MODEL_NAME", "claude-3-haiku-20240307"), // Temporary default, will change to Amazon Q model
 		DBHost:                  getEnv("DB_HOST", ""),
 		DBPort:                  getEnvAsInt("DB_PORT", 5432),
 		DBName:                  getEnv("DB_NAME", ""),

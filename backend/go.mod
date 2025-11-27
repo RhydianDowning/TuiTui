@@ -1,4 +1,4 @@
-module github.com/yourusername/tuitui-backend
+module tuitui-backend
 
 go 1.24.4
 

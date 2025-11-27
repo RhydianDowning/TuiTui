@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/yourusername/tuitui-backend/internal/config"
+	"tuitui-backend/internal/config"
 )
 
 // VerifyRequest represents the request body for email verification

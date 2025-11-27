@@ -132,7 +132,7 @@ resource "aws_lambda_function" "chat" {
       LOG_LEVEL                    = "info"
       COGNITO_USER_POOL_ID         = aws_cognito_user_pool.main.id
       COGNITO_USER_POOL_CLIENT_ID  = aws_cognito_user_pool_client.main.id
-      ANTHROPIC_API_KEY            = var.anthropic_api_key
+      AMAZON_AI_API_KEY            = var.amazon_ai_api_key
     }
   }
 

@@ -33,7 +33,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [tokens, setTokens] = useState<AuthTokens | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load auth state from localStorage on mount
   useEffect(() => {
     try {
       const stored = localStorage.getItem(AUTH_STORAGE_KEY)
@@ -61,10 +60,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (newTokens: AuthTokens) => {
     setTokens(newTokens)
-    // Note: user info would typically be decoded from the ID token
-    // For now, we'll set a basic user object
     setUser({
-      email: 'user@example.com', // This should be extracted from the token
+      email: 'user@example.com',
       user_id: 'temp-user-id',
     })
   }
