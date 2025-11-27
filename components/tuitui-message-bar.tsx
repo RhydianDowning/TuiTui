@@ -8,9 +8,10 @@ interface TuiTuiMessageBarProps {
   input: string
   setInput: (value: string) => void
   onSend: (files?: File[]) => void
+  isLoading?: boolean
 }
 
-export default function TuiTuiMessageBar({ input, setInput, onSend }: TuiTuiMessageBarProps) {
+export default function TuiTuiMessageBar({ input, setInput, onSend, isLoading = false }: TuiTuiMessageBarProps) {
   const [attachedFiles, setAttachedFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -113,7 +114,7 @@ export default function TuiTuiMessageBar({ input, setInput, onSend }: TuiTuiMess
           />
           <button
             onClick={handleSend}
-            disabled={!input.trim() && attachedFiles.length === 0}
+            disabled={(!input.trim() && attachedFiles.length === 0) || isLoading}
             className="tui-button-icon"
           >
             <Send size={20} />

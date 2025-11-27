@@ -2,10 +2,10 @@
 [x] Phase 2: Create a simple 'Hello World' Lambda function
 [x] Phase 3: Setup basic Terraform for single Lambda deployment
 [x] Phase 4: Add API Gateway integration for Lambda
-[-] Phase 5: Implement AWS Cognito authentication - Partial completion
+[x] Phase 5: Implement AWS Cognito authentication
 [ ] Phase 6: Add DynamoDB for data storage (skipped for now)
 [x] Phase 7: Integrate Claude for AI processing
-[ ] Phase 8: Connect frontend to backend APIs
+[x] Phase 8: Connect frontend to backend APIs
 
 Phase 1: Setup Basic Backend Structure
 Goal: Create the initial folder structure and Go module

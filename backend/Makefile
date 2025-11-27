@@ -1,31 +1,50 @@
 .PHONY: build clean test run
 
 # Build the Lambda functions
-build: build-health build-auth-register build-auth-login build-chat
+build: build-health build-auth-register build-auth-login build-auth-verify build-auth-resend-code build-chat
 	@echo "All Lambda functions built"
 
 build-health:
 	@echo "Building health Lambda function..."
-	cd cmd/lambda/health && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../../../bin/bootstrap main.go
-	@echo "Build complete: bin/bootstrap"
+	mkdir -p bin/health
+	cd cmd/lambda/health && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../../../bin/health/bootstrap main.go
+	chmod +x bin/health/bootstrap
+	@echo "Build complete: bin/health/bootstrap"
 
 build-auth-register:
 	@echo "Building auth-register Lambda function..."
-	cd cmd/lambda/auth-register && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../../../bin/bootstrap-auth-register main.go
-	chmod +x bin/bootstrap-auth-register
-	@echo "Build complete: bin/bootstrap-auth-register"
+	mkdir -p bin/auth-register
+	cd cmd/lambda/auth-register && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../../../bin/auth-register/bootstrap main.go
+	chmod +x bin/auth-register/bootstrap
+	@echo "Build complete: bin/auth-register/bootstrap"
 
 build-auth-login:
 	@echo "Building auth-login Lambda function..."
-	cd cmd/lambda/auth-login && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../../../bin/bootstrap-auth-login main.go
-	chmod +x bin/bootstrap-auth-login
-	@echo "Build complete: bin/bootstrap-auth-login"
+	mkdir -p bin/auth-login
+	cd cmd/lambda/auth-login && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../../../bin/auth-login/bootstrap main.go
+	chmod +x bin/auth-login/bootstrap
+	@echo "Build complete: bin/auth-login/bootstrap"
+
+build-auth-verify:
+	@echo "Building auth-verify Lambda function..."
+	mkdir -p bin/auth-verify
+	cd cmd/lambda/auth-verify && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../../../bin/auth-verify/bootstrap main.go
+	chmod +x bin/auth-verify/bootstrap
+	@echo "Build complete: bin/auth-verify/bootstrap"
+
+build-auth-resend-code:
+	@echo "Building auth-resend-code Lambda function..."
+	mkdir -p bin/auth-resend-code
+	cd cmd/lambda/auth-resend-code && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../../../bin/auth-resend-code/bootstrap main.go
+	chmod +x bin/auth-resend-code/bootstrap
+	@echo "Build complete: bin/auth-resend-code/bootstrap"
 
 build-chat:
 	@echo "Building chat Lambda function..."
-	cd cmd/lambda/chat && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../../../bin/bootstrap main.go
-	chmod +x bin/bootstrap
-	@echo "Build complete: bin/bootstrap"
+	mkdir -p bin/chat
+	cd cmd/lambda/chat && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ../../../bin/chat/bootstrap main.go
+	chmod +x bin/chat/bootstrap
+	@echo "Build complete: bin/chat/bootstrap"
 
 # Build for local testing (native OS)
 build-local:

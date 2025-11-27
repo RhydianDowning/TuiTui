@@ -94,6 +94,22 @@ func callClaude(message string, apiKey string) (string, error) {
 
 // Handler is the Lambda function handler
 func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	// CORS headers for all responses
+	corsHeaders := map[string]string{
+		"Content-Type":                 "application/json",
+		"Access-Control-Allow-Origin":  "*",
+		"Access-Control-Allow-Headers": "Content-Type,Authorization",
+		"Access-Control-Allow-Methods": "POST,OPTIONS",
+	}
+
+	// Handle OPTIONS preflight request
+	if request.HTTPMethod == "OPTIONS" {
+		return events.APIGatewayProxyResponse{
+			StatusCode: 200,
+			Headers:    corsHeaders,
+		}, nil
+	}
+
 	// Parse request body
 	var chatReq struct {
 		Message string `json:"message"`
@@ -106,9 +122,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{
 			StatusCode: 400,
 			Body:       string(errorBody),
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
+			Headers:    corsHeaders,
 		}, nil
 	}
 
@@ -121,9 +135,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{
 			StatusCode: 400,
 			Body:       string(errorBody),
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
+			Headers:    corsHeaders,
 		}, nil
 	}
 
@@ -140,9 +152,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Body:       string(errorBody),
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
+			Headers:    corsHeaders,
 		}, nil
 	}
 
@@ -165,9 +175,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Body:       string(errorBody),
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
+			Headers:    corsHeaders,
 		}, nil
 	}
 
@@ -175,9 +183,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Body:       string(responseBody),
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
+		Headers:    corsHeaders,
 	}, nil
 }
 

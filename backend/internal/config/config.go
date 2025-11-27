@@ -35,7 +35,7 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		Environment:             getEnv("ENVIRONMENT", "development"),
 		LogLevel:                getEnv("LOG_LEVEL", "info"),
-		AWSRegion:               getEnv("AWS_REGION", "us-east-1"),
+		AWSRegion:               getEnv("AWS_REGION", "eu-west-2"), // Default to eu-west-2 for our deployment
 		APIVersion:              getEnv("API_VERSION", "v1"),
 		CognitoUserPoolID:       getEnv("COGNITO_USER_POOL_ID", ""),
 		CognitoUserPoolClientID: getEnv("COGNITO_USER_POOL_CLIENT_ID", ""),

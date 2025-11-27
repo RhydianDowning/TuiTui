@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -36,6 +37,22 @@ type ErrorResponse struct {
 
 // Handler is the Lambda function handler for user login
 func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	// CORS headers for all responses
+	corsHeaders := map[string]string{
+		"Content-Type":                 "application/json",
+		"Access-Control-Allow-Origin":  "*",
+		"Access-Control-Allow-Headers": "Content-Type,Authorization",
+		"Access-Control-Allow-Methods": "POST,OPTIONS",
+	}
+
+	// Handle OPTIONS preflight request
+	if request.HTTPMethod == "OPTIONS" {
+		return events.APIGatewayProxyResponse{
+			StatusCode: 200,
+			Headers:    corsHeaders,
+		}, nil
+	}
+
 	// Load configuration from environment variables
 	cfg, err := config.Load()
 	if err != nil {
@@ -46,9 +63,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Body:       string(errorBody),
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
+			Headers:    corsHeaders,
 		}, nil
 	}
 
@@ -62,9 +77,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{
 			StatusCode: 400,
 			Body:       string(errorBody),
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
+			Headers:    corsHeaders,
 		}, nil
 	}
 
@@ -77,9 +90,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{
 			StatusCode: 400,
 			Body:       string(errorBody),
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
+			Headers:    corsHeaders,
 		}, nil
 	}
 
@@ -95,9 +106,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Body:       string(errorBody),
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
+			Headers:    corsHeaders,
 		}, nil
 	}
 
@@ -116,16 +125,28 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	authResult, err := cognitoClient.InitiateAuth(authInput)
 	if err != nil {
+		// Extract more user-friendly error messages from Cognito errors
+		errorMsg := err.Error()
+
+		// Common Cognito error patterns
+		if strings.Contains(errorMsg, "NotAuthorizedException") {
+			errorMsg = "Invalid email or password."
+		} else if strings.Contains(errorMsg, "UserNotFoundException") {
+			errorMsg = "No account found with this email."
+		} else if strings.Contains(errorMsg, "UserNotConfirmedException") {
+			errorMsg = "Please verify your email address before signing in."
+		} else {
+			errorMsg = fmt.Sprintf("Authentication failed: %v", err)
+		}
+
 		errorResponse := ErrorResponse{
-			Error: fmt.Sprintf("Authentication failed: %v", err),
+			Error: errorMsg,
 		}
 		errorBody, _ := json.Marshal(errorResponse)
 		return events.APIGatewayProxyResponse{
 			StatusCode: 401,
 			Body:       string(errorBody),
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
+			Headers:    corsHeaders,
 		}, nil
 	}
 
@@ -149,9 +170,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		return events.APIGatewayProxyResponse{
 			StatusCode: 500,
 			Body:       string(errorBody),
-			Headers: map[string]string{
-				"Content-Type": "application/json",
-			},
+			Headers:    corsHeaders,
 		}, nil
 	}
 
@@ -159,9 +178,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
 		Body:       string(responseBody),
-		Headers: map[string]string{
-			"Content-Type": "application/json",
-		},
+		Headers:    corsHeaders,
 	}, nil
 }
 
