@@ -1,4 +1,5 @@
-[ ] Phase 1: Setup basic backend structure (folders, go.mod, basic configs)
+[x] Phase 1: Setup basic backend structure (folders, go.mod, basic configs)
+
 [ ] Phase 2: Create a simple 'Hello World' Lambda function
 [ ] Phase 3: Setup basic Terraform for single Lambda deployment
 [ ] Phase 4: Add API Gateway integration for Lambda
