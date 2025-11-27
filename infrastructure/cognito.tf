@@ -1,12 +1,9 @@
-# Cognito User Pool
 resource "aws_cognito_user_pool" "main" {
   name = "${var.project_name}-${var.environment}-users"
 
-  # Username configuration
   username_attributes      = ["email"]
   auto_verified_attributes = ["email"]
 
-  # Password policy
   password_policy {
     minimum_length                   = 8
     require_lowercase                = true
@@ -16,7 +13,6 @@ resource "aws_cognito_user_pool" "main" {
     temporary_password_validity_days = 7
   }
 
-  # User attributes
   schema {
     name                = "email"
     attribute_data_type = "String"
@@ -41,7 +37,6 @@ resource "aws_cognito_user_pool" "main" {
     }
   }
 
-  # Account recovery
   account_recovery_setting {
     recovery_mechanism {
       name     = "verified_email"
@@ -49,15 +44,12 @@ resource "aws_cognito_user_pool" "main" {
     }
   }
 
-  # Email configuration (using Cognito's default for now)
   email_configuration {
     email_sending_account = "COGNITO_DEFAULT"
   }
 
-  # MFA configuration (off for now)
   mfa_configuration = "OFF"
 
-  # Verification message templates
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"
     email_subject        = "TuiTui - Verify your email"
@@ -69,19 +61,16 @@ resource "aws_cognito_user_pool" "main" {
   }
 }
 
-# Cognito User Pool Client
 resource "aws_cognito_user_pool_client" "main" {
   name         = "${var.project_name}-${var.environment}-client"
   user_pool_id = aws_cognito_user_pool.main.id
 
-  # Authentication flows
   explicit_auth_flows = [
     "ALLOW_USER_PASSWORD_AUTH",
     "ALLOW_REFRESH_TOKEN_AUTH",
     "ALLOW_USER_SRP_AUTH"
   ]
 
-  # Token validity
   refresh_token_validity = 30 # days
   access_token_validity  = 60 # minutes
   id_token_validity      = 60 # minutes
@@ -92,10 +81,8 @@ resource "aws_cognito_user_pool_client" "main" {
     id_token      = "minutes"
   }
 
-  # Prevent user existence errors
   prevent_user_existence_errors = "ENABLED"
 
-  # OAuth settings (for future use)
   generate_secret = false
 
   read_attributes = [
@@ -110,13 +97,11 @@ resource "aws_cognito_user_pool_client" "main" {
   ]
 }
 
-# Cognito User Pool Domain (optional but useful for hosted UI)
 resource "aws_cognito_user_pool_domain" "main" {
   domain       = "${var.project_name}-${var.environment}-${random_string.cognito_domain_suffix.result}"
   user_pool_id = aws_cognito_user_pool.main.id
 }
 
-# Random string for unique Cognito domain
 resource "random_string" "cognito_domain_suffix" {
   length  = 8
   special = false
