@@ -30,7 +30,6 @@ export default function TuiTuiPage() {
       setMessages((prev) => [...prev, { type: "user", text: userMessage }])
     }
 
-    // Add file info to user message if files are attached
     if (files && files.length > 0) {
       const fileInfo = files.map((file: File) => {
         const sizeInKB = (file.size / 1024).toFixed(2)

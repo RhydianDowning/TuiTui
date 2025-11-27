@@ -170,6 +170,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	// Build system prompt with additional context
 	var systemParts []string
+
 	if chatReq.Team != "" {
 		systemParts = append(systemParts, "Team: "+chatReq.Team)
 	}
@@ -180,9 +181,13 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		systemParts = append(systemParts, "Additional context from uploaded document:\n"+chatReq.MarkdownContent)
 	}
 
-	systemPrompt := ""
+	// Build the complete system prompt with base knowledge
+	systemPrompt := "You are a helpful assistant for the TuiTui team.\n\n"
+	systemPrompt += "KNOWLEDGE BASE - Use this information when answering questions:\n"
+	systemPrompt += "• For questions about USL 502 errors: Contact 'Rhydian Downing' who wrote the USL section of the documentation. Documentation available at: https://runway.devops.tui/docs/default/component/flightsearchresults/#mfe-search-results\n\n"
+
 	if len(systemParts) > 0 {
-		systemPrompt = "You have access to the following additional context:\n\n" + strings.Join(systemParts, "\n\n")
+		systemPrompt += "ADDITIONAL CONTEXT:\n" + strings.Join(systemParts, "\n\n")
 	}
 
 	// Build messages array with conversation history and new message
