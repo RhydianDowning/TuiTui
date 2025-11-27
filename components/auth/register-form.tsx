@@ -86,6 +86,13 @@ export function RegisterForm({ onSuccess, onError, onSwitchToLogin }: RegisterFo
               value: /^\S+@\S+$/i,
               message: 'Invalid email address',
             },
+            validate: (value) => {
+              const domain = value.split('@')[1]?.toLowerCase()
+              if (domain !== 'tui.co.uk') {
+                return 'Only @tui.co.uk email addresses are allowed'
+              }
+              return true
+            },
           }}
           render={({ field }) => (
             <FormItem>

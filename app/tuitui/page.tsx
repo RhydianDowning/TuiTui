@@ -6,6 +6,7 @@ import TuiTuiChatContainer from "@/components/tuitui-chat-container"
 import TuiTuiMessageBar from "@/components/tuitui-message-bar"
 import { AuthModal } from "@/components/auth/auth-modal"
 import { useAuth } from "@/lib/auth-context"
+import type { ChatMessage } from "@/lib/api"
 
 export default function TuiTuiPage() {
   const [messages, setMessages] = useState<{ type: "user" | "bot"; text: string }[]>([])
@@ -24,14 +25,14 @@ export default function TuiTuiPage() {
 
     const userMessage = input.trim()
 
-    // Add user message if there's text
+    // Add user message to display
     if (userMessage) {
       setMessages((prev) => [...prev, { type: "user", text: userMessage }])
     }
 
     // Add file info to user message if files are attached
     if (files && files.length > 0) {
-      const fileInfo = files.map(file => {
+      const fileInfo = files.map((file: File) => {
         const sizeInKB = (file.size / 1024).toFixed(2)
         return `📎 ${file.name} (${file.type || 'unknown type'}, ${sizeInKB} KB)`
       }).join('\n')
@@ -52,23 +53,34 @@ export default function TuiTuiPage() {
       const savedSettings = localStorage.getItem('tuitui-settings')
       const settings = savedSettings ? JSON.parse(savedSettings) : {}
 
-      // Prepare additional data
-      const additionalData: any = {}
+      // Build conversation history from current messages (includes all previous messages)
+      // Note: The current userMessage is passed separately, so we only include prior messages here
+      const conversationHistory: ChatMessage[] = messages.map((msg) => ({
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        content: msg.text,
+      }))
+
+      // Prepare request data with conversation history and additional context
+      // The backend will append the current message to the conversation history
+      const requestData: any = {
+        message: userMessage,
+        conversationHistory,
+      }
+
       if (settings.team && settings.team !== 'add-new') {
-        additionalData.team = settings.team
-        additionalData.teamInfo = Array(11).fill('example.com') // As per the mock
+        requestData.team = settings.team
+        requestData.teamInfo = Array(11).fill('example.com')
       }
       if (settings.markdownFile) {
-        additionalData.markdownContent = settings.markdownFile.content
+        requestData.markdownContent = settings.markdownFile.content
       }
 
-      console.log('Sending chat request with token:', tokens.access_token.substring(0, 20) + '...')
+      console.log('Sending chat request with token:', tokens!.access_token.substring(0, 20) + '...')
+      console.log('Conversation history being sent:', conversationHistory)
+      console.log('Current message:', userMessage)
 
-      // Call the chat API with additional data
-      const response = await apiClient.chat(
-        { message: userMessage, ...additionalData },
-        tokens.access_token
-      )
+      // Call the chat API with conversation history and additional data
+      const response = await apiClient.chat(requestData, tokens!.access_token)
 
       console.log('Chat response:', response)
 
@@ -76,19 +88,16 @@ export default function TuiTuiPage() {
       setMessages((prev) => [...prev, { type: "bot", text: response.message }])
     } catch (error) {
       console.error('Chat API error:', error)
-      
+
       // Check if it's an authentication error
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       const isAuthError = errorMessage.includes('Unauthorized') || errorMessage.includes('401')
-      
+
       // Add error message
-      setMessages((prev) => [...prev, {
-        type: "bot",
-        text: isAuthError 
-          ? 'Your session has expired. Please log out and log back in.' 
-          : `Sorry, I encountered an error: ${errorMessage}`
-      }])
-      
+      setMessages((prev) => [...prev, { type: "bot", text: isAuthError
+        ? 'Your session has expired. Please log out and log back in.'
+        : `Sorry, I encountered an error: ${errorMessage}` }])
+
       // If it's an auth error, show the auth modal
       if (isAuthError) {
         setTimeout(() => setAuthModalOpen(true), 2000)

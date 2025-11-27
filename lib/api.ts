@@ -21,8 +21,17 @@ export interface ResendCodeRequest {
   email: string
 }
 
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 export interface ChatRequest {
   message: string
+  conversationHistory?: ChatMessage[]
+  team?: string
+  teamInfo?: string[]
+  markdownContent?: string
 }
 
 export interface LoginResponse {

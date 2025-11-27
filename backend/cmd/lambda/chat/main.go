@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -27,23 +28,38 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-// callClaude calls the Anthropic Claude API
-func callClaude(message string, apiKey string) (string, error) {
+// ChatMessage represents a message in the conversation history
+type ChatMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+
+// callClaude calls the Anthropic Claude API with conversation history and system context
+func callClaude(messages []ChatMessage, systemPrompt string, apiKey string) (string, error) {
 	if apiKey == "" {
 		return "", fmt.Errorf("Anthropic API key not configured")
 	}
 
 	url := "https://api.anthropic.com/v1/messages"
 
+	// Convert ChatMessage to the format Claude expects
+	claudeMessages := make([]map[string]string, len(messages))
+	for i, msg := range messages {
+		claudeMessages[i] = map[string]string{
+			"role":    msg.Role,
+			"content": msg.Content,
+		}
+	}
+
 	requestBody := map[string]interface{}{
 		"model":      "claude-3-haiku-20240307",
 		"max_tokens": 1000,
-		"messages": []map[string]string{
-			{
-				"role":    "user",
-				"content": message,
-			},
-		},
+		"messages":   claudeMessages,
+	}
+
+	// Add system prompt if provided
+	if systemPrompt != "" {
+		requestBody["system"] = systemPrompt
 	}
 
 	jsonData, err := json.Marshal(requestBody)
@@ -112,10 +128,11 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 
 	// Parse request body
 	var chatReq struct {
-		Message         string   `json:"message"`
-		Team            string   `json:"team,omitempty"`
-		TeamInfo        []string `json:"teamInfo,omitempty"`
-		MarkdownContent string   `json:"markdownContent,omitempty"`
+		Message             string        `json:"message"`
+		ConversationHistory []ChatMessage `json:"conversationHistory,omitempty"`
+		Team                string        `json:"team,omitempty"`
+		TeamInfo            []string      `json:"teamInfo,omitempty"`
+		MarkdownContent     string        `json:"markdownContent,omitempty"`
 	}
 	if err := json.Unmarshal([]byte(request.Body), &chatReq); err != nil {
 		errorResponse := ErrorResponse{
@@ -142,23 +159,45 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		}, nil
 	}
 
-	// Build enhanced message with additional context
-	enhancedMessage := chatReq.Message
+	// Build system prompt with additional context
+	var systemParts []string
 	if chatReq.Team != "" {
-		enhancedMessage += "\n\nTeam: " + chatReq.Team
+		systemParts = append(systemParts, "Team: "+chatReq.Team)
 	}
 	if len(chatReq.TeamInfo) > 0 {
-		enhancedMessage += "\n\nTeam Information:\n" + fmt.Sprintf("%v", chatReq.TeamInfo)
+		systemParts = append(systemParts, "Team Information: "+strings.Join(chatReq.TeamInfo, ", "))
 	}
 	if chatReq.MarkdownContent != "" {
-		enhancedMessage += "\n\nMarkdown Content:\n" + chatReq.MarkdownContent
+		systemParts = append(systemParts, "Additional context from uploaded document:\n"+chatReq.MarkdownContent)
+	}
+
+	systemPrompt := ""
+	if len(systemParts) > 0 {
+		systemPrompt = "You have access to the following additional context:\n\n" + strings.Join(systemParts, "\n\n")
+	}
+
+	// Build messages array with conversation history and new message
+	var messages []ChatMessage
+	if len(chatReq.ConversationHistory) > 0 {
+		messages = append(messages, chatReq.ConversationHistory...)
+	}
+	messages = append(messages, ChatMessage{
+		Role:    "user",
+		Content: chatReq.Message,
+	})
+
+	// Log for debugging
+	fmt.Printf("Conversation history received: %d messages\n", len(chatReq.ConversationHistory))
+	fmt.Printf("Total messages being sent to Claude: %d\n", len(messages))
+	for i, msg := range messages {
+		fmt.Printf("Message %d [%s]: %s\n", i, msg.Role, msg.Content[:min(50, len(msg.Content))])
 	}
 
 	// Get API key from environment
 	apiKey := os.Getenv("ANTHROPIC_API_KEY")
 
-	// Call Claude API
-	claudeResponse, err := callClaude(enhancedMessage, apiKey)
+	// Call Claude API with conversation history and system prompt
+	claudeResponse, err := callClaude(messages, systemPrompt, apiKey)
 	if err != nil {
 		errorResponse := ErrorResponse{
 			Error: fmt.Sprintf("Failed to get response from Claude: %v", err),
